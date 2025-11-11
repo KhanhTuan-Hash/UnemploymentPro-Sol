@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" 
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+        <title>Document</title>
+    </head>
+    <body class = "bg-white">
+        <div class="container">
+            <form action="/update_work/{{ work[0] }}" method="POST">
+                <div>
+                    <label class="form-label" for="name">Name</label>
+                    <input class="form-control" type="text" id="name" name="name" value="{{ work[1] }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="company">Company</label>
+                    <input class="form-control" type="text" id="company" name="company" value="{{ work[2] }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="location">Location</label>
+                    <input class="form-control" type="text" id="location" name="location" value="{{ work[3] }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="tags">Tags</label>
+                    <input class="form-control" type="text" id="tags" name="tags" value="{{ work[4] }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="responsibilities">Responsibilities</label>
+                    <input class="form-control" type="text" id="responsibilities" name="responsibilities" value="{{ work[5] }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="skills">Skills</label>
+                    <input class="form-control" type="text" id="skills" name="skills" value="{{ work[6] }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="preferred_skills">Preferred_skills</label>
+                    <input class="form-control" type="text" id="preferred_skills" name="preferred_skills" value="{{ work[7] }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="benefits">Benefits</label>
+                    <input class="form-control" type="text" id="benefits" name="benefits" value="{{ work[8] }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="link">Link</label>
+                    <input class="form-control" type="text" id="link" name="link" value="{{ work[9] }}" required>
+                </div>
+                 <button type="submit" class="btn btn-primary">Update Work</button>
+            </form>
+            <a href="/" class="back-link">Back to Works list</a>
+        </div>
+    </body>
+</html>

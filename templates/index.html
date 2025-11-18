@@ -13,7 +13,7 @@
         <!-- Heading -->
         <nav class="navbar navbar-expand-md navbar-dark bg-info fs-5">
             <div class="container-fluid">
-                <a href="#" class="navbar-brand">Logo</a>
+                <a href="{{ url_for('index') }}" class="navbar-brand">Logo</a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#nav" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,77 +23,19 @@
                 <div class="collapse navbar-collapse" id="nav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item active">
-                            <a class="nav-link" href="">Home</a>
+                            <a class="nav-link" href="#">Input CV</a>
                         </li>
                         <li class="nav-item active">
-                            <a class="nav-link" href="">Form</a>
+                            <a class="nav-link" href="{{ url_for('jobs_route') }}">Info Jobs</a>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
-        <div class="container">
-            <h2>Add New Work</h2>
-            <form action="/add_work" method="POST">
-                <div>
-                    <label class="form-label" for="name">Name</label>
-                    <input class="form-control" type="text" id="name" name="name" placeholder="Enter Name" required>
-                </div>
-                <div>
-                    <label class="form-label" for="company">Company</label>
-                    <input class="form-control" type="text" id="company" name="company" placeholder="Enter Company" required>
-                </div>
-                <div>
-                    <label class="form-label" for="location">Location</label>
-                    <input class="form-control" type="text" id="location" name="location" placeholder="Enter Location" required>
-                </div>
-                <div>
-                    <label class="form-label" for="tags">Tags</label>
-                    <input class="form-control" type="text" id="tags" name="tags" placeholder="Enter Tags" required>
-                </div>
-                <div>
-                    <label class="form-label" for="responsibilities">Responsibilities</label>
-                    <input class="form-control" type="text" id="responsibilities" name="responsibilities" placeholder="Enter Responsibilities" required>
-                </div>
-                <div>
-                    <label class="form-label" for="skills">Skills</label>
-                    <input class="form-control" type="text" id="skills" name="skills" placeholder="Enter Skills" required>
-                </div>
-                <div>
-                    <label class="form-label" for="preferred_skills">Preferred_skills</label>
-                    <input class="form-control" type="text" id="preferred_skills" name="preferred_skills" placeholder="Enter Preferred_skills" required>
-                </div>
-                <div>
-                    <label class="form-label" for="benefits">Benefits</label>
-                    <input class="form-control" type="text" id="benefits" name="benefits" placeholder="Enter Benefits" required>
-                </div>
-                <div>
-                    <label class="form-label" for="link">Link</label>
-                    <input class="form-control" type="text" id="link" name="link" placeholder="Enter Link" required>
-                </div>
-                 <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
 
-            <h2>Works List</h2>
-            <ul class="work-list list-group">
-                {% for work in works %}
-                    <li>
-                        <span>Name: {{ work[1] }}</span>
-                        <span>Company: {{ work[2] }}</span>
-                        <span>Location: {{ work[3] }}</span>
-                        <span>Tags: {{ work[4] }}</span>
-                        <span>Responsibilities: {{ work[5] }}</span>
-                        <span>Skills: {{ work[6] }}</span>
-                        <span>Preferred_skills: {{ work[7] }}</span>
-                        <span>Benefits: {{ work[8] }}</span>
-                        <span>Link: {{ work[9] }}</span>
-                        <div>
-                            <a href="{{ url_for('update_work_route', id=work[0]) }}">Edit</a>
-                            <a href="{{ url_for('delete_work_route', id=work[0]) }}" class="delete_work_route">Delete</a>
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
+        <div class="container text-center mt-5">
+            <h1>Welcome to our Job Portal!</h1>
+            <p>Your journey to a new career starts here.</p>
         </div>
     </body>
 </html>

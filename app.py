@@ -1,124 +1,68 @@
 from flask import Flask, render_template, request, redirect, url_for
+from job import init_job, get_jobs, add_job, update_job, delete_job
 import sqlite3
 
 app = Flask(__name__)
+db_path = "jobs.db"
 
-# works
-db_path = "works.db"
-
-def init_db():
-    connect = sqlite3.connect(db_path)
-    cursor = connect.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS works(
-            id INTEGER PRIMARY KEY,
-            name TEXT,
-            company TEXT,
-            location TEXT,
-            tags TEXT,
-            responsibilities TEXT,
-            skills TEXT,
-            preferred_skills TEXT,
-            benefits TEXT,
-            link TEXT
-        )
-    ''')
-    connect.commit()
-    connect.close()
-
-
-# Get all works from the database
-def get_works():
-    connect = sqlite3.connect(db_path)
-    cursor = connect.cursor()
-    cursor.execute('SELECT * FROM works')
-    works = cursor.fetchall()
-    connect.close()
-    return works
-
-# Add a work to the database
-def add_work(name, company, location, tags, responsibilities, skills, preferred_skills, benefits, link):
-    connect = sqlite3.connect(db_path)
-    cursor = connect.cursor()
-    cursor.execute('INSERT INTO works (name, company, location, tags, responsibilities, skills, preferred_skills, benefits, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-                    (name, company, location, tags, responsibilities, skills, preferred_skills, benefits, link))
-    connect.commit()
-    connect.close()
-
-# Update work's details
-def update_work(id, name, company, location, tags, responsibilities, skills, preferred_skills, benefits, link):  
-    connect = sqlite3.connect(db_path)
-    cursor = connect.cursor()
-    cursor.execute('''
-        UPDATE works 
-        SET name = ?, company = ?, location = ?, tags = ?, 
-            responsibilities = ?, skills = ?, preferred_skills = ?, 
-            benefits = ?, link = ?
-        WHERE id = ?
-    ''', (name, company, location, tags, responsibilities, skills, preferred_skills, benefits, link, id))
-    connect.commit()
-    connect.close()
-
-# Delete a work by ID
-def delete_work(id):
-    connect = sqlite3.connect(db_path)
-    cursor = connect.cursor()
-    cursor.execute('DELETE FROM works WHERE id = ?', (id,))
-    connect.commit()
-    connect.close()
-
-
-# Home page to list works and show form to add a new work
 @app.route('/')
 def index():
-    works = get_works()
-    return render_template('index.html', works=works)
+    return render_template('index.html')
 
-# Add work via POST request
-@app.route('/add_work', methods=['POST'])
-def add_work_route():
+@app.route('/jobs')
+def jobs_route():
+    # jobs = get_jobs()
+    # return render_template('jobs.html', jobs=jobs)
+    return render_template('jobs.html')
+
+@app.route('/form_job')
+def form_job_route():
+    jobs = get_jobs()
+    return render_template('form_job.html', jobs=jobs)
+
+@app.route('/add_job', methods=['POST'])
+def add_job_route():
     name = request.form['name']
     company = request.form['company']
     location = request.form['location']
+    end_date = request.form['end_date']
     tags = request.form['tags']
     responsibilities = request.form['responsibilities']
     skills = request.form['skills']
     preferred_skills = request.form['preferred_skills']
     benefits = request.form['benefits']
     link = request.form['link']
-    add_work(name, company, location, tags, responsibilities, skills, preferred_skills, benefits, link)
-    return redirect(url_for('index'))
+    add_job(name, company, location, tags, responsibilities, skills, preferred_skills, benefits, link, end_date)
+    return redirect(url_for('jobs_route'))
 
-# Update work via POST request
-@app.route('/update_work/<int:id>', methods=['GET', 'POST'])
-def update_work_route(id):
+@app.route('/update_job/<int:id>', methods=['GET', 'POST'])
+def update_job_route(id):
     if request.method == 'POST':
         name = request.form['name']
         company = request.form['company']
         location = request.form['location']
+        end_date = request.form['end_date']
         tags = request.form['tags']
         responsibilities = request.form['responsibilities']
         skills = request.form['skills']
         preferred_skills = request.form['preferred_skills']
         benefits = request.form['benefits']
         link = request.form['link']
-        update_work(id, name, company, location, tags, responsibilities, skills, preferred_skills, benefits, link)
-        return redirect(url_for('index'))
+        update_job(id, name, company, location, tags, responsibilities, skills, preferred_skills, benefits, link, end_date)
+        return redirect(url_for('jobs_route'))
     
-    # Pre-fill form with current work data
     connect = sqlite3.connect(db_path)
     cursor = connect.cursor()
-    cursor.execute('SELECT * FROM works WHERE id = ?', (id,))
-    work = cursor.fetchone()
+    cursor.execute('SELECT * FROM jobs WHERE id = ?', (id,))
+    job = cursor.fetchone()
     connect.close()
-    return render_template('update_work.html', work=work)
+    return render_template('update_job.html', job=job)
 
-# Delete work via GET request
-@app.route('/delete_work/<int:id>', methods=['GET'])
-def delete_work_route(id):
-    delete_work(id)
-    return redirect(url_for('index'))
+@app.route('/delete_job/<int:id>', methods=['GET'])
+def delete_job_route(id):
+    delete_job(id)
+    return redirect(url_for('jobs_route'))
 
 if __name__ == '__main__':
-    init_db()
+    init_job()
     app.run(debug=True)

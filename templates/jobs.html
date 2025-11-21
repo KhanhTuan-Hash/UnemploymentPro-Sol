@@ -18,27 +18,31 @@
     </nav>
 
     <div class="container mt-4">
-        <h2>Works List</h2>
-        <ul class="work-list list-group">
-            {% for work in works %}
-                <li>
-                    <span>Name: {{ work[1] }}</span>
-                    <span>Company: {{ work[2] }}</span>
-                    <span>Location: {{ work[3] }}</span>
-                    <span>Tags: {{ work[4] }}</span>
-                    <span>Responsibilities: {{ work[5] }}</span>
-                    <span>Skills: {{ work[6] }}</span>
-                    <span>Preferred_skills: {{ work[7] }}</span>
-                    <span>Benefits: {{ work[8] }}</span>
-                    <span>Link: {{ work[9] }}</span>
-                    <div>
-                        <a href="{{ url_for('update_work_route', id=work[0]) }}">Edit</a>
-                        <a href="{{ url_for('delete_work_route', id=work[0]) }}" class="delete_work_route">Delete</a>
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <h2 class="mb-3">Jobs List ({{ jobs|length }})</h2>
+                <ul class="list-group">
+                    {% for job in jobs %}
+                        <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center">
+                            <div class="me-auto my-1">
+                                <h5 class="mb-1">{{ job[1] }} <span class="badge bg-primary rounded-pill">{{ job[11] }} pts</span></h5>
+                                <small class="text-muted">{{ job[2] }} - {{ job[3] }} | End date: {{ job[10] }}</small>
+                            </div>
+                            <div class="my-1">
+                                <a href="{{ url_for('update_job_route', id=job[0]) }}" class="btn btn-outline-secondary btn-sm me-2">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                <a href="{{ url_for('delete_job_route', id=job[0]) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to delete this job?');">
+                                    <i class="bi bi-trash-fill"></i> Delete
+                                </a>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-center">No jobs found. <a href="{{ url_for('form_job_route') }}">Upload one now!</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
     </div>
-
 </body>
 </html>

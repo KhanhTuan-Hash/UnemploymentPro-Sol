@@ -5,20 +5,24 @@ import sqlite3
 app = Flask(__name__)
 db_path = "jobs.db"
 
+def get_sorted_jobs():
+    jobs_raw = get_jobs()
+    jobs_sorted = sorted(jobs_raw, key=lambda job: (-job[11], job[10]))
+    return jobs_sorted
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    jobs = get_sorted_jobs()
+    return render_template('index.html', jobs=jobs)
 
 @app.route('/jobs')
 def jobs_route():
-    # jobs = get_jobs()
-    # return render_template('jobs.html', jobs=jobs)
-    return render_template('jobs.html')
+    jobs = get_sorted_jobs()
+    return render_template('jobs.html', jobs=jobs)
 
 @app.route('/form_job')
 def form_job_route():
-    jobs = get_jobs()
-    return render_template('form_job.html', jobs=jobs)
+    return render_template('form_job.html')
 
 @app.route('/add_job', methods=['POST'])
 def add_job_route():

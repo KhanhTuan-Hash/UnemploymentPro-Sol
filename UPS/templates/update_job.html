@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Job</title>
+    <!-- CSS taginput -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/taginput.css') }}">
+    <!-- Boostrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Icon Boostrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fs-5">
+        <div class="container-fluid">
+            <a href="{{ url_for('jobs_route') }}" class="navbar-brand fs-4"><i class="bi bi-arrow-left"></i></a>
+            <span class="navbar-brand mx-auto">Update Job</span>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white text-center fs-1 fw-bold">Update Form</div>
+            <div class="card-body">
+                <form action="{{ url_for('update_job_route', id=job[0]) }}" method="POST" id="form-job">
+                    
+                    <div class="mb-2"><label>Name</label><input class="form-control" type="text" name="name" value="{{ job[1] }}" required></div>
+                    <div class="mb-2"><label>Company</label><input class="form-control" type="text" name="company" value="{{ job[2] }}" required></div>
+                    <div class="mb-2"><label>Location</label><input class="form-control" type="text" name="location" value="{{ job[3] }}" required></div>
+                    <div class="mb-2"><label>End Date</label><input class="form-control" type="date" name="enddate" value="{{ job[10] }}" required></div>
+                    <div class="mb-3">
+                        <label class="form-label">Tags</label>
+                        <div class="wrapper">
+                            <div class="content">
+                                <ul>
+                                    <input type="text" spellcheck="false" id="tags-input" placeholder="Input tag">
+                                </ul>
+                            </div>
+                            <div class="details">
+                                <p><span>10</span> tags</p>
+                                <button type="button" class="remove-all-btn">Remove all</button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="tags" id="hiddentags" value="{{ job[4] }}"> 
+                    </div>
+                    <div class="mb-2"><label>Responsibilities</label><textarea class="form-control" name="responsibilities" required rows="3">{{ job[5] }}</textarea></div>
+                    <div class="mb-2"><label>Skills</label><textarea class="form-control" name="skills" required rows="3">{{ job[6] }}</textarea></div>
+                    <div class="mb-2"><label>Preferred Skills</label><textarea class="form-control" name="preskills" required rows="3">{{ job[7] }}</textarea></div>
+                    <div class="mb-2"><label>Benefits</label><textarea class="form-control" name="benefits" required rows="3">{{ job[8] }}</textarea></div>
+                    <div class="mb-2"><label>Link</label><input class="form-control" type="text" name="link" value="{{ job[9] }}" required></div>
+
+                    <button type="button" class="btn btn-primary mt-3 w-100" id="submitBtn">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS taginput -->
+    <script src="{{ url_for('static', filename='js/taginput.js') }}"></script>
+    <script>
+        document.getElementById("submitBtn").addEventListener("click", function() {
+            const tagsArray = getTags();
+            if (tagsArray.length === 0) { alert("Tags required!"); return; }
+            if (confirm("Confirm update?")) {
+                document.getElementById('hidden-tags').value = tagsArray.join('-');
+                document.getElementById("form-job").submit();
+            }
+        });
+    </script>
+</body>
+</html>

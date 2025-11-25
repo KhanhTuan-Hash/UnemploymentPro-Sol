@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Input CV</title>
+    <!-- Boostrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Icon Boostrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- CSS style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .block-section { border: 1px solid #495057; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #2b3035; }
+        .required::after { content: " *"; color: #dc3545; }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fs-5">
+        <div class="container-fluid">
+            <a href="{{ url_for('cv_home_route') }}" class="navbar-brand fs-4" onclick="return confirm('Dữ liệu chưa lưu sẽ bị mất?');"><i class="bi bi-arrow-left"></i></a>
+            <span class="navbar-brand mx-auto">{{ 'Edit Your CV' if cv else 'Input Your CV' }}</span>
+            <span style="width: 50px;"></span>
+        </div>
+    </nav>
+
+    <div class="container mt-4 mb-5">
+        <div class="card shadow">
+            <div class="card-body">
+                <form action="{{ url_for('save_cv_route') }}" method="POST" enctype="multipart/form-data" id="cvForm">
+                    
+                    <!-- 1. PERSONAL INFO -->
+                    <h4 class="mb-3 text-primary">Personal Information</h4>
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label required">Full Name</label>
+                            <input type="text" class="form-control" name="name" value="{{ cv['basic'][1] if cv else '' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label required">Email</label>
+                            <input type="email" class="form-control" name="email" value="{{ cv['basic'][2] if cv else '' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" name="phone" value="{{ cv['basic'][3] if cv and cv['basic'][3] else '' }}">
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label">Profile Photo</label>
+                            <input type="file" class="form-control" name="photo" accept="image/jpeg, image/png, image/jpg">
+                            {% if cv and cv['basic'][4] %}
+                                <div class="mt-1 text-success"><small><i class="bi bi-check-circle"></i> Current: {{ cv['basic'][4] }}</small></div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label required">Personal Profile / Objective</label>
+                            <textarea class="form-control" name="profile" rows="4" required>{{ cv['basic'][5] if cv else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <hr>
+                    
+                    <!-- 2. EDUCATION -->
+                    <div id="education-container">
+                        <h4 class="text-primary d-flex justify-content-between align-items-center">
+                            Education
+                            <button type="button" class="btn btn-sm btn-outline-success d-none" id="btn-add-edu" onclick="addBlock('education')"><i class="bi bi-plus-lg"></i></button>
+                        </h4>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="graduatedCheck" onchange="toggleEducation()" 
+                            {% if cv and cv['education'] %}checked{% endif %}>
+                            <label class="form-check-label" for="graduatedCheck">I have graduated / Have degrees</label>
+                        </div>
+                        <div class="education-list">
+                            {% if cv and cv['education'] %}
+                                {% for edu in cv['education'] %}
+                                <div class="block-section position-relative">
+                                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label required">Degree Type</label>
+                                            <select class="form-select" name="edutype[]">
+                                                <option value="University" {% if edu[1] == 'University' %}selected{% endif %}>University</option>
+                                                <option value="College" {% if edu[1] == 'College' %}selected{% endif %}>College</option>
+                                                <option value="High School" {% if edu[1] == 'High School' %}selected{% endif %}>High School</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Degree Title</label><input type="text" class="form-control" name="edutitle[]" value="{{ edu[2] }}"></div>
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Major</label><input type="text" class="form-control" name="edumajor[]" value="{{ edu[3] }}"></div>
+                                        <div class="col-md-6 mb-2"><label class="form-label required">School Name</label><input type="text" class="form-control" name="eduschool[]" value="{{ edu[4] }}"></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 3. CERTIFICATES -->
+                    <div id="certificate-container">
+                        <h4 class="text-primary d-flex justify-content-between">
+                            Certificates (Other)
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="addBlock('cert')"><i class="bi bi-plus-lg"></i></button>
+                        </h4>
+                        <div class="cert-list">
+                            {% if cv and cv['certs'] %}
+                                {% for cert in cv['certs'] %}
+                                <div class="block-section position-relative">
+                                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Certificate Name</label><input type="text" class="form-control" name="certname[]" value="{{ cert[1] }}"></div>
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Organization / Place</label><input type="text" class="form-control" name="certorg[]" value="{{ cert[2] }}"></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 4. LANGUAGES -->
+                    <div id="language-container">
+                        <h4 class="text-primary d-flex justify-content-between">
+                            Languages
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="addBlock('lang')"><i class="bi bi-plus-lg"></i></button>
+                        </h4>
+                        <div class="lang-list">
+                            {% if cv and cv['languages'] %}
+                                {% for lang in cv['languages'] %}
+                                <div class="block-section position-relative">
+                                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label required">Language</label>
+                                            <select class="form-select" name="langname[]">
+                                                <option value="English" {% if lang[1] == 'English' %}selected{% endif %}>English</option>
+                                                <option value="Vietnamese" {% if lang[1] == 'Vietnamese' %}selected{% endif %}>Vietnamese</option>
+                                                <option value="Japanese" {% if lang[1] == 'Japanese' %}selected{% endif %}>Japanese</option>
+                                                <option value="Other" {% if lang[1] == 'Other' %}selected{% endif %}>Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Certificate Type</label><input type="text" class="form-control" name="langtype[]" value="{{ lang[2] }}"></div>
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Score</label><input type="text" class="form-control" name="langscore[]" value="{{ lang[3] }}"></div>
+                                        <div class="col-md-6 mb-2"><label class="form-label">Provider (Optional)</label><input type="text" class="form-control" name="langprovider[]" value="{{ lang[4] }}"></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 5. SKILLS -->
+                    <div id="skill-container">
+                        <h4 class="text-primary d-flex justify-content-between">
+                            Skills
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="addBlock('skill')"><i class="bi bi-plus-lg"></i></button>
+                        </h4>
+                        <div class="skill-list">
+                            {% if cv and cv['skills'] %}
+                                {% for skill in cv['skills'] %}
+                                <div class="block-section position-relative">
+                                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Tool / Language</label><input type="text" class="form-control" name="skilltool[]" value="{{ skill[1] }}"></div>
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Years of Experience</label><input type="text" class="form-control" name="skillyears[]" value="{{ skill[2] }}"></div>
+                                        <div class="col-12 mb-2"><label class="form-label required">Review</label><textarea class="form-control" name="skillreview[]" rows="3">{{ skill[3] }}</textarea></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 6. EXPERIENCE -->
+                    <div id="experience-container">
+                        <h4 class="text-primary d-flex justify-content-between">
+                            Work Experience
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="addBlock('exp')"><i class="bi bi-plus-lg"></i></button>
+                        </h4>
+                        <div class="exp-list">
+                            {% if cv and cv['experience'] %}
+                                {% for exp in cv['experience'] %}
+                                <div class="block-section position-relative">
+                                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Company</label><input type="text" class="form-control" name="expcompany[]" value="{{ exp[1] }}"></div>
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Time</label><input type="text" class="form-control" name="exptime[]" value="{{ exp[2] }}"></div>
+                                        <div class="col-md-6 mb-2"><label class="form-label required">Position</label><input type="text" class="form-control" name="expposition[]" value="{{ exp[3] }}"></div>
+                                        <div class="col-md-6 mb-2"><label class="form-label">URL (Optional)</label><input type="text" class="form-control" name="expurl[]" value="{{ exp[4] }}"></div>
+                                        <div class="col-12 mb-2"><label class="form-label required">Environment (Tools, Langs)</label><input type="text" class="form-control" name="expenv[]" value="{{ exp[5] }}"></div>
+                                        <div class="col-12 mb-2"><label class="form-label required">Review / Description</label><textarea class="form-control" name="expreview[]" rows="5">{{ exp[6] }}</textarea></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 7. CONTACTS -->
+                    <div id="contact-container">
+                        <h4 class="text-primary d-flex justify-content-between">
+                            Social / Contacts
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="addBlock('contact')"><i class="bi bi-plus-lg"></i></button>
+                        </h4>
+                        <div class="contact-list">
+                            {% if cv and cv['contacts'] %}
+                                {% for contact in cv['contacts'] %}
+                                <div class="block-section position-relative">
+                                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-2"><label class="form-label required">Platform Name</label><input type="text" class="form-control" name="contactplatform[]" value="{{ contact[1] }}"></div>
+                                        <div class="col-md-8 mb-2"><label class="form-label required">Link</label><input type="text" class="form-control" name="contactlink[]" value="{{ contact[2] }}"></div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5">
+                        <button type="button" class="btn btn-primary btn-lg px-5" onclick="submitCV()">{{ 'Update CV' if cv else 'Submit CV' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <template id="education-template">
+        <div class="block-section position-relative">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label required">Degree Type</label>
+                    <select class="form-select" name="edutype[]">
+                        <option value="University">University</option>
+                        <option value="College">College</option>
+                        <option value="High School">High School</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-2"><label class="form-label required">Degree Title</label><input type="text" class="form-control" name="edutitle[]"></div>
+                <div class="col-md-6 mb-2"><label class="form-label required">Major</label><input type="text" class="form-control" name="edumajor[]"></div>
+                <div class="col-md-6 mb-2"><label class="form-label required">School Name</label><input type="text" class="form-control" name="eduschool[]"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="cert-template">
+        <div class="block-section position-relative">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+            <div class="row">
+                <div class="col-md-6 mb-2"><label class="form-label required">Certificate Name</label><input type="text" class="form-control" name="certname[]"></div>
+                <div class="col-md-6 mb-2"><label class="form-label required">Organization / Place</label><input type="text" class="form-control" name="certorg[]"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="lang-template">
+        <div class="block-section position-relative">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label required">Language</label>
+                    <select class="form-select" name="langname[]">
+                        <option value="English">English</option>
+                        <option value="Vietnamese">Vietnamese</option>
+                        <option value="Japanese">Japanese</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-2"><label class="form-label required">Certificate Type</label><input type="text" class="form-control" name="langtype[]"></div>
+                <div class="col-md-6 mb-2"><label class="form-label required">Score</label><input type="text" class="form-control" name="langscore[]"></div>
+                <div class="col-md-6 mb-2"><label class="form-label">Provider (Optional)</label><input type="text" class="form-control" name="langprovider[]"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="skill-template">
+        <div class="block-section position-relative">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+            <div class="row">
+                <div class="col-md-6 mb-2"><label class="form-label required">Tool / Language</label><input type="text" class="form-control" name="skilltool[]"></div>
+                <div class="col-md-6 mb-2"><label class="form-label required">Years of Experience</label><input type="text" class="form-control" name="skillyears[]"></div>
+                <div class="col-12 mb-2"><label class="form-label required">Review</label><textarea class="form-control" name="skillreview[]" rows="3" placeholder="Short self-review"></textarea></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="exp-template">
+        <div class="block-section position-relative">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+            <div class="row">
+                <div class="col-md-6 mb-2"><label class="form-label required">Company</label><input type="text" class="form-control" name="expcompany[]"></div>
+                <div class="col-md-6 mb-2"><label class="form-label required">Time</label><input type="text" class="form-control" name="exptime[]"></div>
+                <div class="col-md-6 mb-2"><label class="form-label required">Position</label><input type="text" class="form-control" name="expposition[]"></div>
+                <div class="col-md-6 mb-2"><label class="form-label">URL (Optional)</label><input type="text" class="form-control" name="expurl[]"></div>
+                <div class="col-12 mb-2"><label class="form-label required">Environment (Tools, Langs)</label><input type="text" class="form-control" name="expenv[]"></div>
+                <div class="col-12 mb-2"><label class="form-label required">Review / Description</label><textarea class="form-control" name="expreview[]" rows="5"></textarea></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="contact-template">
+        <div class="block-section position-relative">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeBlock(this)"></button>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label class="form-label required">Platform Name</label><input type="text" class="form-control" name="contactplatform[]" placeholder="Github, LinkedIn..."></div>
+                <div class="col-md-8 mb-2"><label class="form-label required">Link</label><input type="text" class="form-control" name="contactlink[]"></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Script Cvscript -->
+    <script src="{{ url_for('static', filename='js/cvscript.js') }}"></script>
+    <script>
+        const isEdit = {{ 'true' if cv else 'false' }};
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            const gradCheck = document.getElementById('graduatedCheck');
+            if (gradCheck && gradCheck.checked) {
+                document.getElementById('btn-add-edu').classList.remove('d-none');
+            }
+        });
+    </script>
+</body>
+</html>

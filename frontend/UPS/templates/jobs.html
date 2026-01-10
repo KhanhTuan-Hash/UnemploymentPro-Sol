@@ -38,8 +38,14 @@
                                     <span class="me-2"><i class="bi bi-geo-alt"></i> {{ job[3] }}</span>
                                     <span class="text-danger fw-bold"><i class="bi bi-clock"></i> {{ job[10] }}</span>
                                 </div>
-                                {% if job[11] is not none and job[11] >= 0 %}
-                                    <span class="badge bg-success mt-2">Match: {{ job[11]|int }}%</span>
+                               {% if job[11] is not none and job[11] >= 0 %}
+                                    {% set score_val = job[11] | float %}
+                                    <span class="badge {% if score_val > 0.7 %}bg-success{% elif score_val > 0.4 %}bg-warning text-dark{% else %}bg-danger{% endif %} mt-2">
+                                        Match: {{ (score_val * 100) | int }}%
+                                    </span>
+                                    <a href="{{ url_for('job_analysis_route', id=job[0]) }}" class="btn btn-sm btn-info text-white ms-2 mt-2">
+                                        <i class="bi bi-graph-up"></i> View Analysis
+                                    </a>
                                 {% endif %}
                             </div>
                             

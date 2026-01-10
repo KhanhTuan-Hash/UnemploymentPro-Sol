@@ -87,6 +87,6 @@ function submitJob() {
     }
     
     if (confirm("Confirm save?")) {
-        document.getElementById("formjob").submit();
+        document.getElementById("form-job").submit();
     }
 }

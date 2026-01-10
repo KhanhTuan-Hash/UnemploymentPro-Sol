@@ -13,6 +13,7 @@ spacy
 sentence-transformers
 scikit-learn
 skillNer
+ipython
 
 # Data Handling
 pandas

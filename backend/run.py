@@ -39,13 +39,14 @@ def analyze_cv():
 
         # Convert Python Objects to JSON-ready format
         jobs_json = []
-        best_job = top_jobs_raw[0][0]  # Used for gap analysis
+        best_job = top_jobs_raw[0][0]
 
         for job_obj, score in top_jobs_raw:
             jobs_json.append({
+                "id": job_obj.id,  # <--- ADD THIS LINE
                 "title": job_obj.name,
                 "company": job_obj.company,
-                "score": round(score, 3),
+                "score": round(float(score), 3),
                 "location": job_obj.location,
                 "link": job_obj.link,
                 "tags": job_obj.tags

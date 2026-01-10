@@ -59,7 +59,7 @@
     <script src="{{ url_for('static', filename='js/taginput.js') }}"></script>
     <script>
         document.getElementById("submitBtn").addEventListener("click", function() {
-            const tagsArray = getTags();
+            const tagsArray = submitJob();
             if (tagsArray.length === 0) { alert("Tags required!"); return; }
             if (confirm("Confirm update?")) {
                 document.getElementById('hidden-tags').value = tagsArray.join('-');

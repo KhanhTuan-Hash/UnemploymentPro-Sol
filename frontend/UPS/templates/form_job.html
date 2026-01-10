@@ -58,10 +58,21 @@
     <script src="{{ url_for('static', filename='js/taginput.js') }}"></script>
     <script>
         document.getElementById("submitBtn").addEventListener("click", function() {
-            const tagsArray = getTags();
-            if (tagsArray.length === 0) { alert("Tags required!"); return; }
+            // 1. Get the tags from the global variable defined in taginput.js
+            // (Ensure 'tags' is accessible, otherwise use the DOM elements)
+            const tagsInput = document.getElementById('tags-input');
+            
+            // Safety check: ensure we have tags
+            if (tags.length === 0) { 
+                alert("Tags required!"); 
+                return; 
+            }
+
             if (confirm("Confirm save?")) {
-                document.getElementById('hidden-tags').value = tagsArray.join('-');
+                // 2. FIX: Use the correct ID 'hiddentags' (no hyphen)
+                document.getElementById('hiddentags').value = tags.join('-'); 
+                
+                // 3. Submit the form
                 document.getElementById("form-job").submit();
             }
         });

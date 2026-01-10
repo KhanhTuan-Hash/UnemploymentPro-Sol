@@ -1,6 +1,8 @@
 import os
 import random
-from flask import render_template, request, redirect, url_for
+import requests
+from flask import render_template, request, redirect, url_for, jsonify
+import json
 from werkzeug.utils import secure_filename
 from UPS import app
 from UPS.job import get_jobs, add_job, update_job, delete_job, get_job_by_id, update_job_analysis, reset_all_analysis, delete_expired_jobs
@@ -80,6 +82,96 @@ def job_analysis_route(id):
         return redirect(url_for('index'))
     return render_template('job_analysis.html', job=job)
 
+@app.route('/api/analyze', methods=['POST'])
+def analyze_cv():
+    try:
+        data = request.json
+        cv_text = data.get('cv_text', '')
+        
+        user_cv = CV(cv_text)
+        top_jobs_raw = job_database.find_top_k(user_cv, 3)
+
+        jobs_json = []
+        for job_obj, score in top_jobs_raw:
+            jobs_json.append({
+                "title": job_obj.name,
+                "company": job_obj.company,
+                # FIX: Convert float32 to standard float
+                "score": round(float(score), 3), 
+                "location": job_obj.location,
+                "tags": job_obj.tags
+            })
+
+        best_job = top_jobs_raw[0][0]
+        missing_skills, courses = job_database.skill_gap_analysis_and_recommender(user_cv, best_job)
+
+        return jsonify({
+            "status": "success",
+            "jobs": jobs_json,
+            "missing_skills": missing_skills,
+            "recommendations": courses
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/analyze_job/<int:id>')
+def analyze_job_real(id):
+    if not has_cv_data():
+        return redirect(url_for('cv_home_route'))
+
+    # 1. Get user data from frontend DB
+    cv_data = get_cv_full()
+    # Combine profile and skills into a single string for the AI
+    profile_text = cv_data['basic'][5]
+    skills_text = " ".join([s[0] for s in cv_data['skills']])
+    full_text = f"{profile_text} {skills_text}"
+
+    try:
+        # 2. POST to the Backend Engine
+        response = requests.post('http://127.0.0.1:5000/api/analyze', 
+                                 json={'cv_text': full_text},
+                                 timeout=10)
+        result = response.json()
+
+        if result.get('status') == 'success':
+            # 3. Save the AI results into your frontend jobs.db
+            # We take the score from the top match
+            ai_score = result['jobs'][0]['score'] * 100 
+            missing = ", ".join(result['missing_skills'])
+            # Convert the recommendations dictionary to a string to store in DB
+            recommendations = json.dumps(result['recommendations'])
+            
+            update_job_analysis(id, ai_score, missing, recommendations)
+
+    except Exception as e:
+        print(f"Failed to connect to backend engine: {e}")
+
+    return redirect(url_for('job_analysis_route', id=id))
+
+@app.route('/analyze_cv_real/<int:job_id>')
+def analyze_cv_real(job_id):
+    # 1. Get the CV text from your frontend DB
+    cv_data = get_cv_full() 
+    # (Construct a string from cv_data['basic'], cv_data['skills'], etc.)
+    full_text = f"{cv_data['basic'][5]} {' '.join([s[0] for s in cv_data['skills']])}"
+
+    # 2. Call the backend run.py
+    try:
+        response = requests.post('http://127.0.0.1:5000/api/analyze', 
+                                 json={'cv_text': full_text})
+        results = response.json()
+        
+        # 3. Update your frontend DB with real AI results
+        # Find the specific job score from the results list
+        top_job = results['jobs'][0] # Simplest logic: take the top match
+        update_job_analysis(job_id, top_job['score'], 
+                            ", ".join(results['missing_skills']), 
+                            str(results['recommendations']))
+    except Exception as e:
+        print(f"Connection failed: {e}")
+
+    return redirect(url_for('job_analysis_route', id=job_id))
+
 @app.route('/reset_all_scores')
 def reset_all_scores_route():
     reset_all_analysis()
@@ -111,6 +203,26 @@ def input_cv_route():
 def edit_cv_route():
     cv_data = get_cv_full()
     return render_template('input_cv.html', cv=cv_data)
+
+@app.route('/save_analysis', methods=['POST'])
+def save_analysis():
+    data = request.json
+    # data['jobs'] is a list of results from the ML backend
+    
+    for job_result in data.get('jobs', []):
+        # We convert the Python List/Dict into a JSON String
+        # so the database can store it in a single TEXT column
+        encoded_missing = json.dumps(data.get('missing_skills', []))
+        encoded_youtube = json.dumps(data.get('recommendations', {}))
+        
+        # Call the function in job.py
+        update_job_analysis(
+            job_result['id'], 
+            job_result['score'], 
+            encoded_missing, 
+            encoded_youtube
+        )
+    return jsonify({"status": "success"})
 
 @app.route('/save_cv', methods=['POST'])
 def save_cv_route():

@@ -45,35 +45,48 @@
                 <!-- MISSING SKILL -->
                 <div class="card-custom">
                     <div class="card-custom-header text-danger bg-danger bg-opacity-10">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Missing Skill
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Missing Skills
                     </div>
-                    <div class="card-custom-body">
-                        {% if job[12] %}
+                    <div class="card-custom-body p-3">
+                        {% set missing = job[12] | from_json %}
+                        {% if missing and missing|length > 0 %}
                             <ul class="list-analysis missing-item">
-                                {% for line in job[12].split('\n') %}
-                                    {% if line.strip() %}<li>{{ line.strip() }}</li>{% endif %}
+                                {% for skill in missing %}
+                                    <li class="mb-2"><span class="badge bg-outline-danger text-danger border border-danger">{{ skill }}</span></li>
                                 {% endfor %}
                             </ul>
                         {% else %}
-                            <p class="text-success fst-italic mb-0">No significant missing skills.</p>
+                            <p class="text-success fst-italic mb-0">You have all the required skills for this role!</p>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- RECOMMENDATIONS -->
-                <div class="card-custom">
+                <!-- RECOMMENDATION -->
+                <div class="card-custom mt-4">
                     <div class="card-custom-header text-success bg-success bg-opacity-10">
-                        <i class="bi bi-lightbulb-fill me-2"></i> Recommendations
+                        <i class="bi bi-youtube me-2"></i> Learning Recommendations
                     </div>
-                    <div class="card-custom-body">
-                        {% if job[13] %}
-                            <ul class="list-analysis recommend-item">
-                                {% for line in job[13].split('\n') %}
-                                    {% if line.strip() %}<li>{{ line.strip() }}</li>{% endif %}
-                                {% endfor %}
-                            </ul>
+                    <div class="card-custom-body p-3">
+                        {% set recs = job[13] | from_json %}
+                        {% if recs %}
+                            {% for skill, videos in recs.items() %}
+                                <div class="mb-4">
+                                    <h6 class="fw-bold text-primary border-bottom pb-1">To learn: {{ skill }}</h6>
+                                    <ul class="list-unstyled">
+                                        {% for video in videos %}
+                                            <li class="mb-2">
+                                                <a href="{{ video.url }}" target="_blank" class="text-decoration-none">
+                                                    <i class="bi bi-play-circle-fill text-danger me-2"></i>
+                                                    {{ video.name }} 
+                                                    <span class="text-muted small">({{ video.channel }})</span>
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endfor %}
                         {% else %}
-                            <p class="text-muted fst-italic mb-0">No recommendations available.</p>
+                            <p class="text-muted fst-italic mb-0">No specific video recommendations available.</p>
                         {% endif %}
                     </div>
                 </div>

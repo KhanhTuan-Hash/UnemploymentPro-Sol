@@ -21,6 +21,8 @@ _global_extractor = None
 _global_embedder = None
 _global_recommender = None
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SHARED_DB_PATH = os.path.join(BASE_DIR, 'frontend', 'database', 'jobs.db')
 
 def get_extractor():
     global _global_extractor
@@ -125,19 +127,36 @@ class SQLiteManager:
         conn.close()
 
     def get_all_jobs(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM jobs")
+        def safe_json_load(data):
+            if not data: return []
+            try:
+                val = json.loads(data)
+                return val if isinstance(val, list) else [str(val)]
+            except:
+                # Fallback for plain text separated by commas or hyphens
+                if '-' in str(data): return [x.strip() for x in data.split('-') if x.strip()]
+                if ',' in str(data): return [x.strip() for x in data.split(',') if x.strip()]
+                return [str(data)]
+
+        connect = sqlite3.connect(self.db_path)
+        cursor = connect.cursor()
+        cursor.execute('SELECT * FROM jobs') # Selects all 14 columns
         rows = cursor.fetchall()
-        conn.close()
+        connect.close()
 
         jobs = []
         for row in rows:
             jobs.append(Job(
-                id=row[0], name=row[1], company=row[2], location=row[3],
-                tags=json.loads(row[4]), responsibilities=json.loads(row[5]),
-                skills=json.loads(row[6]), preferred_skills=json.loads(row[7]),
-                benefits=json.loads(row[8]), link=row[9]
+                id=row[0], 
+                name=row[1], 
+                company=row[2], 
+                location=row[3],
+                tags=safe_json_load(row[4]),
+                responsibilities=safe_json_load(row[5]),
+                skills=safe_json_load(row[6]),
+                preskills=safe_json_load(row[7]),
+                benefits=safe_json_load(row[8]),
+                link=row[9] # This matches row[9] in your job.py table
             ))
         return jobs
 
@@ -293,7 +312,7 @@ def initialize_system():
     print("--- SYSTEM STARTUP ---")
 
     # 1. Setup SQLite
-    db_manager = SQLiteManager()
+    db_manager = SQLiteManager(db_name=SHARED_DB_PATH)
     db_manager.create_table()
 
     # 2. Check for data, if empty, SEED it

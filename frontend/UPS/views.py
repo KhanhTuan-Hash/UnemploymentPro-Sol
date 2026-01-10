@@ -1,6 +1,7 @@
 import os
 import random
 import requests
+import time
 from flask import render_template, request, redirect, url_for, jsonify
 import json
 from werkzeug.utils import secure_filename
@@ -21,6 +22,54 @@ def index():
     jobs = get_sorted_jobs()
     user_has_cv = has_cv_data()
     return render_template('index.html', jobs=jobs, hascv=user_has_cv)
+
+@app.route('/bulk_scan', methods=['POST'])
+def bulk_scan():
+    try:
+        # 1. Get the CV text from your SQLite DB
+        cv_data = get_cv_full()
+        if not cv_data or not cv_data['basic']:
+            return jsonify({"status": "error", "message": "No CV found"}), 400
+
+        # Profile is index 5 in cv_basic
+        cv_text = cv_data['basic'][5] 
+
+        # 2. Call the AI Backend (run.py) running on port 5000
+        # We'll use your new backend route 'analyze-all'
+        response = requests.post('http://127.0.0.1:5000/api/analyze-all', 
+                                 json={'cv_text': cv_text}, 
+                                 timeout=60) # High timeout for heavy ML
+        
+        if response.status_code == 200:
+            results = response.json().get('results', [])
+            for res in results:
+                # SAFE HANDLING FOR MISSING SKILLS
+                skills = res.get('missing_skills')
+                if isinstance(skills, list):
+                    m_skills_str = "\n".join(skills)
+                elif isinstance(skills, str):
+                    m_skills_str = skills
+                else:
+                    m_skills_str = "" # Default if empty or None
+
+                try:
+                    update_job_analysis(
+                        res.get('job_id'), 
+                        res.get('score', 0), 
+                        m_skills_str, 
+                        json.dumps(res.get('recommendations', []))
+                    )
+                    # Prevent SQLite Database is Locked error
+                    time.sleep(0.05) 
+                except Exception as db_e:
+                    print(f"Database update failed for job {res.get('job_id')}: {db_e}")
+
+            return jsonify({"status": "success"})
+        
+        return jsonify({"status": "error", "message": "Backend returned error"}), 500
+    except Exception as e:
+        print(f"Bulk scan error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/jobs')
 def jobs_route():

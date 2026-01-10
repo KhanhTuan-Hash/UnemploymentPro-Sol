@@ -16,6 +16,36 @@ def home():
     # Looks for index.html inside the 'templates' folder
     return render_template('index.html')
 
+@app.route('/api/analyze-all', methods=['POST'])
+def analyze_all_jobs():
+    try:
+        data = request.json
+        cv_text = data.get('cv_text', '')
+        user_cv = CV(cv_text)
+
+        # Get all jobs from the vector database
+        # This accesses the jobs loaded into your JobDatabase class
+        all_jobs = job_database.jobs 
+        
+        results = []
+        for job in all_jobs:
+            # Calculate match percentage
+            score_raw = job_database.calculate_score(user_cv, job)
+            score_percent = round(float(score_raw * 100), 1)
+            
+            # Identify missing skills
+            missing_skills, recommendations = job_database.skill_gap_analysis_and_recommender(user_cv, job)
+            
+            results.append({
+                "job_id": getattr(job, 'id', None),
+                "score": score_percent,
+                "missing_skills": missing_skills if isinstance(missing_skills, list) else [str(missing_skills)] if missing_skills else [],
+                "recommendations": recommendations if recommendations else []
+            })
+
+        return jsonify({"status": "success", "results": results})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_cv():
